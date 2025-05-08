@@ -1,0 +1,41 @@
+import pandas as pd
+import pickle
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.ensemble import RandomForestRegressor
+
+# 🚀 Load dataset
+df = pd.read_csv("crop_production.csv")  # Make sure the file is in the same directory
+
+# ✅ Drop missing values in 'Production'
+df = df.dropna(subset=['Production'])
+
+# ✅ Encode categorical columns
+label_encoders = {}
+categorical_columns = ["Season", "Crop"]
+
+for col in categorical_columns:
+    df[col] = df[col].astype(str).str.strip()
+    le = LabelEncoder()
+    df[col] = le.fit_transform(df[col])
+    label_encoders[col] = le  # Store encoders for future use
+
+# ✅ Define features & target
+X = df[['Crop_Year', 'Season', 'Crop', 'Area']]
+y = df['Production']
+
+# ✅ Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# ✅ Train model
+model = RandomForestRegressor(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+# ✅ Save the model and encoders
+with open("model.pkl", "wb") as model_file:
+    pickle.dump(model, model_file)
+
+with open("encoder.pkl", "wb") as encoder_file:
+    pickle.dump(label_encoders, encoder_file)
+
+print("✅ Model and encoders saved successfully!")

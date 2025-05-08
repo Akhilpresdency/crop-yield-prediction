@@ -1,0 +1,52 @@
+import pickle
+import numpy as np
+import gradio as gr
+
+# 🚀 Load model & encoders
+model = pickle.load(open("model.pkl", "rb"))
+label_encoders = pickle.load(open("encoder.pkl", "rb"))
+
+def predict_yield(crop_year, season, crop, area):
+    try:
+        # ✅ Clean and format input
+        season = season.strip().title()
+        crop = crop.strip().title()
+
+        # ✅ Get encoder mappings
+        season_mapping = dict(zip(label_encoders["Season"].classes_, range(len(label_encoders["Season"].classes_))))
+        crop_mapping = dict(zip(label_encoders["Crop"].classes_, range(len(label_encoders["Crop"].classes_))))
+
+        # ✅ Validate input
+        if season not in season_mapping:
+            return f"❌ Invalid Season '{season}'. Try: {list(season_mapping.keys())}"
+        if crop not in crop_mapping:
+            return f"❌ Invalid Crop '{crop}'. Try: {list(crop_mapping.keys())}"
+
+        # ✅ Encode inputs
+        season_encoded = season_mapping[season]
+        crop_encoded = crop_mapping[crop]
+
+        # ✅ Prepare input for prediction
+        input_data = np.array([[crop_year, season_encoded, crop_encoded, area]])
+        predicted_yield = model.predict(input_data)[0]
+
+        return f"✅ Predicted Crop Yield: {predicted_yield:.2f} metric tons"
+
+    except Exception as e:
+        return f"❌ Error: {e}"
+
+# 🚀 Launch Gradio Interface
+interface = gr.Interface(
+    fn=predict_yield,
+    inputs=[
+        gr.Number(label="Crop Year"),
+        gr.Textbox(label="Season (e.g., Kharif, Rabi)"),
+        gr.Textbox(label="Crop (e.g., Rice, Wheat)"),
+        gr.Number(label="Area in hectares")
+    ],
+    outputs="text",
+    title="🌾 Crop Yield Prediction",
+    description="Enter crop details to get an estimated yield prediction."
+)
+
+interface.launch()
