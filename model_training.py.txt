@@ -5,7 +5,11 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestRegressor
 
 # 🚀 Load dataset
-df = pd.read_csv("crop_production.csv")  # Make sure the file is in the same directory
+from google.colab import drive
+drive.mount('/content/drive')
+
+model = pickle.load(open("/content/drive/MyDrive/your-folder/model.pkl", "rb"))
+
 
 # ✅ Drop missing values in 'Production'
 df = df.dropna(subset=['Production'])
